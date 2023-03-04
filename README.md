@@ -11,8 +11,8 @@ let bytes = unimplemented!();
 
 let rmesh = rmesh::RMesh::read(bytes)?;
 
-let positions: Vec<_> = rmesh.vertices.iter().map(|v| v.position).collect();
-let tex_coords: Vec<_> = rmesh.vertices.iter().map(|v| v.tex_coords).collect();
+let positions: Vec<_> = rmesh.meshes[0].vertices.iter().map(|v| v.position).collect();
+let tex_coords: Vec<_> = rmesh.meshes[0].vertices.iter().map(|v| v.tex_coords).collect();
 
 println!("Postions: {:#?}", positions);
 println!("UVS: {:#?}", tex_coords);
