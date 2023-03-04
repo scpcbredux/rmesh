@@ -5,7 +5,7 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum RMeshError {
-    #[error("Invalid Header: (Expected RoomMesh/RoomMesh.HasTriggerBox, got {0})")]
+    #[error("Invalid Header: (Expected RoomMesh or RoomMesh.HasTriggerBox, instead got {0})")]
     InvalidHeader(String),
 }
 
@@ -26,12 +26,16 @@ pub struct Vertex {
 }
 
 #[derive(Debug)]
-pub struct RMesh {
-    pub tag: String,
-    pub mesh_count: u32,
+pub struct Mesh {
+    pub textures: Vec<String>,
     pub vertices: Vec<Vertex>,
     pub triangles: Vec<[u32; 3]>,
-    pub textures: Vec<String>,
+}
+
+#[derive(Debug)]
+pub struct RMesh {
+    pub tag: String,
+    pub meshes: Vec<Mesh>,
 }
 
 impl RMesh {
@@ -46,12 +50,13 @@ impl RMesh {
         }
 
         let mesh_count = cursor.read_u32::<LittleEndian>()?;
-        let mut textures = Vec::new();
-
-        let mut vertices = Vec::new();
-        let mut triangles = Vec::new();
+        let mut meshes = vec![];
 
         for _ in 0..mesh_count {
+            let mut textures = vec![];
+            let mut vertices = vec![];
+            let mut triangles = vec![];
+
             for _ in 0..2 {
                 let alpha_type = cursor.read_u8()?;
                 if alpha_type != 0 {
@@ -94,14 +99,17 @@ impl RMesh {
 
                 triangles.push(tri);
             }
+
+            meshes.push(Mesh {
+                textures,
+                vertices,
+                triangles,
+            });
         }
 
         Ok(Self {
             tag,
-            mesh_count,
-            vertices,
-            triangles,
-            textures,
+            meshes,
         })
     }
 }
