@@ -1,6 +1,6 @@
 [package]
 name = "rmesh"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "A parser for the rmesh extension"
@@ -10,6 +10,9 @@ repository = "https://github.com/DotWith/rmesh/"
 readme = "README.md"
 
 [dependencies]
-anyhow = "1.0.68"
 thiserror = "1.0.38"
 byteorder = "1.4.3"
+
+[[example]]
+name = "parse"
+path = "examples/parse.rs"
