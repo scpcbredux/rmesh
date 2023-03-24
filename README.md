@@ -18,5 +18,5 @@ fn main() -> Result<(), rmesh::RMeshError> {
 
 ### Task list
 
-- [ ] Write documentation
+- [X] Write documentation
 - [ ] Create a writer

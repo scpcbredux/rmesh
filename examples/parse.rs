@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 fn main() -> Result<(), rmesh::RMeshError> {
     let mut args = std::env::args();
     let _ = args.next();
@@ -7,7 +5,7 @@ fn main() -> Result<(), rmesh::RMeshError> {
     let rmesh = rmesh::RMesh::read(&bytes)?;
 
     for texture in &rmesh.meshes[0].textures {
-        println!("Texture File: {}", texture);
+        println!("Texture Path: {}", texture.path);
     }
 
     Ok(())
