@@ -11,8 +11,19 @@ readme = "README.md"
 
 [dependencies]
 thiserror = "1.0.38"
-byteorder = "1.4.3"
+binrw = "0.11.1"
+
+[dev-dependencies]
+three-d = "0.14.0"
 
 [[example]]
-name = "parse"
-path = "examples/parse.rs"
+name = "read"
+path = "examples/read.rs"
+
+[[example]]
+name = "write"
+path = "examples/write.rs"
+
+[[example]]
+name = "view"
+path = "examples/view.rs"

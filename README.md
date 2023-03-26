@@ -2,21 +2,24 @@
 
 [![crates.io](https://img.shields.io/crates/v/rmesh.svg)](https://crates.io/crates/rmesh) [![docs.rs](https://docs.rs/rmesh/badge.svg)](https://docs.rs/rmesh)
 
-Rust parser for `.rmesh` file. The `.rmesh` is used in `SCPCB` for room meshes.
+Rust parser for **rmesh** file extension. The **rmesh** file extension is used in `SCPCB` for room meshes.
+
+### Usage
+
+```rust
+let bytes = std::fs::read("GFX/map/lockroom_opt.rmesh").unwrap();
+let rmesh = reread_rmeshad(&bytes).unwrap();
+assert_eq!(rmesh.colliders.len(), 0);
+assert_eq!(rmesh.entities.len(), 13);
+```
 
 ### Examples
 
-```rust
-fn main() -> Result<(), rmesh::RMeshError> {
-    let bytes = std::fs::read("GFX/map/checkpoint1_opt.rmesh")?;
-    let rmesh = rmesh::RMesh::read(&bytes)?;
-    println!("{:#?}", rmesh);
-
-    Ok(())
-}
-```
+- [Read](../examples/read.rs)
+- [Write](../examples/write.rs)
+- [View](../examples/view.rs)
 
 ### Task list
 
-- [X] Write documentation
-- [ ] Create a writer
+- [ ] Write documentation
+- [X] Create a writer
