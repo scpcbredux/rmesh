@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use rmesh::{RMeshError, read_rmesh, Header};
 use three_d::*;
 
@@ -32,15 +30,6 @@ fn main() -> Result<(), RMeshError> {
     let mut control = OrbitControl::new(*camera.target(), 1.0, 100.0);
 
     let cpu_meshes = get_header_meshes(&model);
-    let ph_material = PhysicalMaterial {
-        albedo: Color {
-            r: 128,
-            g: 128,
-            b: 128,
-            a: 255,
-        },
-        ..Default::default()
-    };
     let material = CpuMaterial {
         albedo: Color {
             r: 128,
@@ -60,11 +49,11 @@ fn main() -> Result<(), RMeshError> {
     )
     .unwrap();
 
-    let mut directional = [
+    let directional = [
         DirectionalLight::new(&context, 1.0, Color::WHITE, &vec3(1.0, -1.0, 0.0)),
         DirectionalLight::new(&context, 1.0, Color::WHITE, &vec3(1.0, 1.0, 0.0)),
     ];
-    let mut ambient = AmbientLight {
+    let ambient = AmbientLight {
         color: Color::WHITE,
         intensity: 0.2,
         ..Default::default()

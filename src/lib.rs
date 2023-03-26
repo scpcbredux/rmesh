@@ -95,6 +95,19 @@ pub struct Vertex {
     pub color: [u8; 3],
 }
 
+impl Vertex {
+    pub fn from_position(position: [f32; 3]) -> Vertex {
+        Self {
+            position,
+            tex_coords: [
+                [0., 0.],
+                [0., 0.],
+            ],
+            color: [0, 0, 0],
+        }
+    }
+}
+
 #[derive(BinRead, BinWrite, Debug)]
 pub struct SimpleMesh {
     pub vertex_count: u32,

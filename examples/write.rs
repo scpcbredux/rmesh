@@ -17,203 +17,35 @@ fn main() -> Result<(), RMeshError> {
                 textures: [Texture::empty(), Texture::empty()],
                 vertices: vec![
                     // Front
-                    Vertex {
-                        position: [min_x, min_y, max_z],
-                        tex_coords: [
-                            [0., 0.], // Texture
-                            [0., 0.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [max_x, min_y, max_z],
-                        tex_coords: [
-                            [1., 0.], // Texture
-                            [1., 0.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [max_x, max_y, max_z],
-                        tex_coords: [
-                            [1., 1.], // Texture
-                            [1., 1.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [min_x, max_y, max_z],
-                        tex_coords: [
-                            [0., 1.], // Texture
-                            [0., 1.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
+                    Vertex::from_position([min_x, min_y, max_z]),
+                    Vertex::from_position([max_x, min_y, max_z]),
+                    Vertex::from_position([max_x, max_y, max_z]),
+                    Vertex::from_position([min_x, max_y, max_z]),
                     // Back
-                    Vertex {
-                        position: [min_x, max_y, min_z],
-                        tex_coords: [
-                            [1., 0.], // Texture
-                            [1., 0.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [max_x, max_y, min_z],
-                        tex_coords: [
-                            [0., 0.], // Texture
-                            [0., 0.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [max_x, min_y, min_z],
-                        tex_coords: [
-                            [0., 1.], // Texture
-                            [0., 1.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [min_x, min_y, min_z],
-                        tex_coords: [
-                            [1., 1.], // Texture
-                            [1., 1.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
+                    Vertex::from_position([min_x, max_y, min_z]),
+                    Vertex::from_position([max_x, max_y, min_z]),
+                    Vertex::from_position([max_x, min_y, min_z]),
+                    Vertex::from_position([min_x, min_y, min_z]),
                     // Right
-                    Vertex {
-                        position: [max_x, min_y, min_z],
-                        tex_coords: [
-                            [0., 0.], // Texture
-                            [0., 0.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [max_x, max_y, min_z],
-                        tex_coords: [
-                            [1., 0.], // Texture
-                            [1., 0.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [max_x, max_y, max_z],
-                        tex_coords: [
-                            [1., 1.], // Texture
-                            [1., 1.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [max_x, min_y, max_z],
-                        tex_coords: [
-                            [0., 1.], // Texture
-                            [0., 1.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
+                    Vertex::from_position([max_x, min_y, min_z]),
+                    Vertex::from_position([max_x, max_y, min_z]),
+                    Vertex::from_position([max_x, max_y, max_z]),
+                    Vertex::from_position([max_x, min_y, max_z]),
                     // Left
-                    Vertex {
-                        position: [min_x, min_y, max_z],
-                        tex_coords: [
-                            [1., 0.], // Texture
-                            [1., 0.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [min_x, max_y, max_z],
-                        tex_coords: [
-                            [0., 0.], // Texture
-                            [0., 0.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [min_x, max_y, min_z],
-                        tex_coords: [
-                            [0., 1.], // Texture
-                            [0., 1.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [min_x, min_y, min_z],
-                        tex_coords: [
-                            [1., 1.], // Texture
-                            [1., 1.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
+                    Vertex::from_position([min_x, min_y, max_z]),
+                    Vertex::from_position([min_x, max_y, max_z]),
+                    Vertex::from_position([min_x, max_y, min_z]),
+                    Vertex::from_position([min_x, min_y, min_z]),
                     // Top
-                    Vertex {
-                        position: [max_x, max_y, min_z],
-                        tex_coords: [
-                            [1., 0.], // Texture
-                            [1., 0.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [min_x, max_y, min_z],
-                        tex_coords: [
-                            [0., 0.], // Texture
-                            [0., 0.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [min_x, max_y, max_z],
-                        tex_coords: [
-                            [0., 1.], // Texture
-                            [0., 1.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [max_x, max_y, max_z],
-                        tex_coords: [
-                            [1., 1.], // Texture
-                            [1., 1.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
+                    Vertex::from_position([max_x, max_y, min_z]),
+                    Vertex::from_position([min_x, max_y, min_z]),
+                    Vertex::from_position([min_x, max_y, max_z]),
+                    Vertex::from_position([max_x, max_y, max_z]),
                     // Bottom
-                    Vertex {
-                        position: [max_x, min_y, max_z],
-                        tex_coords: [
-                            [0., 0.], // Texture
-                            [0., 0.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [min_x, min_y, max_z],
-                        tex_coords: [
-                            [1., 0.], // Texture
-                            [1., 0.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [min_x, min_y, min_z],
-                        tex_coords: [
-                            [1., 1.], // Texture
-                            [1., 1.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
-                    Vertex {
-                        position: [max_x, min_y, min_z],
-                        tex_coords: [
-                            [0., 1.], // Texture
-                            [0., 1.], // Lightmap
-                        ],
-                        color: [0, 0, 0],
-                    },
+                    Vertex::from_position([max_x, min_y, max_z]),
+                    Vertex::from_position([min_x, min_y, max_z]),
+                    Vertex::from_position([min_x, min_y, min_z]),
+                    Vertex::from_position([max_x, min_y, min_z]),
                 ],
                 triangles: vec![
                     [0, 1, 2], [2, 3, 0], // Front

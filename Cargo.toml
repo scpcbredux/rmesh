@@ -8,6 +8,7 @@ homepage = "https://github.com/DotWith/rmesh/"
 documentation = "https://docs.rs/rmesh"
 repository = "https://github.com/DotWith/rmesh/"
 readme = "README.md"
+exclude = ["/assets/*"]
 
 [dependencies]
 thiserror = "1.0.38"
