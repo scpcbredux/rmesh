@@ -37,6 +37,12 @@ impl From<String> for FixedLengthString {
     }
 }
 
+impl From<FixedLengthString> for String {
+    fn from(value: FixedLengthString) -> Self {
+        String::from_utf8(value.values.clone()).unwrap()
+    }
+}
+
 #[derive(Clone, Eq, PartialEq, Default, Debug)]
 pub struct ThreeTypeString(pub Vec<u8>);
 

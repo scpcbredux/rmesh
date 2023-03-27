@@ -1,13 +1,10 @@
-// #![warn(missing_docs)]
-
 use binrw::binrw;
 use binrw::{BinRead, BinWrite, io::Cursor, BinReaderExt, BinWriterExt};
 
-use crate::strings::FixedLengthString;
-
 // Re-exports
 pub use crate::entities::*;
-pub use crate::error::*;
+pub use crate::error::RMeshError;
+pub use crate::strings::*;
 
 mod entities;
 mod error;
@@ -22,7 +19,7 @@ pub fn header_tag(trigger_box_count: usize) -> Result<FixedLengthString, RMeshEr
 }
 
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Header {
     #[bw(try_calc(header_tag(trigger_boxes.len())))]
     tag: FixedLengthString,
@@ -54,7 +51,7 @@ pub struct Header {
 }
 
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ComplexMesh {
     pub textures: [Texture; 2],
     
@@ -71,41 +68,30 @@ pub struct ComplexMesh {
     pub triangles: Vec<[u32; 3]>,
 }
 
-#[derive(BinRead, BinWrite, Debug)]
+#[derive(BinRead, BinWrite, Debug, Default)]
 pub struct Texture {
-    pub blend_type: u8,
+    pub blend_type: TextureBlendType,
     
-    #[br(if(blend_type != 0))]
+    #[br(if(blend_type != TextureBlendType::None))]
     pub path: Option<FixedLengthString>,
 }
 
-impl Texture {
-    pub fn empty() -> Self {
-        Self {
-            blend_type: 0,
-            path: None,
-        }
-    }
+#[binrw]
+#[brw(repr(u8))]
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub enum TextureBlendType {
+    #[default]
+    None = 0,
+    Visible = 1,
+    Lightmap = 2,
+    Transparent = 3,
 }
 
-#[derive(BinRead, BinWrite, Debug)]
+#[derive(BinRead, BinWrite, Debug, Default)]
 pub struct Vertex {
     pub position: [f32; 3],
     pub tex_coords: [[f32; 2]; 2],
     pub color: [u8; 3],
-}
-
-impl Vertex {
-    pub fn from_position(position: [f32; 3]) -> Vertex {
-        Self {
-            position,
-            tex_coords: [
-                [0., 0.],
-                [0., 0.],
-            ],
-            color: [0, 0, 0],
-        }
-    }
 }
 
 #[derive(BinRead, BinWrite, Debug)]
@@ -158,12 +144,48 @@ impl Texture {
     }
 }
 
+/// Reads a .rmesh file.
+/// 
+/// # Examples
+/// 
+/// ```rust
+/// let bytes = std::fs::read("GFX/map/lockroom_opt.rmesh").unwrap();
+/// let rmesh = read_rmeshad(&bytes).unwrap();
+/// assert_eq!(rmesh.colliders.len(), 0);
+/// assert_eq!(rmesh.entities.len(), 13);
+/// ```
 pub fn read_rmesh(bytes: &[u8]) -> Result<Header, RMeshError> {
     let mut cursor = Cursor::new(bytes);
     let header: Header = cursor.read_le()?;
     Ok(header)
 }
 
+/// Writes a .rmesh file.
+/// 
+/// # Examples
+/// Creating a 2D triangle.
+///
+/// ```rust
+/// let header = Header {
+///     meshes: vec![
+///         ComplexMesh {
+///             vertices: vec![
+///                 Vertex { position: [0.0, 0.0, 0.0], ..Default::default() },
+///                 Vertex { position: [0.5, 1.0, 0.0], ..Default::default() },
+///                 Vertex { position: [1.0, 0.0, 0.0], ..Default::default() },
+///             ],
+///             triangles: vec![
+///                 [0, 1, 2]
+///             ],
+///             ..Default::default()
+///         }
+///     ],
+///     ..Default::default()
+/// };
+/// let rmesh = write_rmesh(&header)?;
+/// let mut file = File::create("assets/cube.rmesh").unwrap();
+/// file.write_all(&rmesh).unwrap();
+/// ```
 pub fn write_rmesh(header: &Header) -> Result<Vec<u8>, RMeshError> {
     let mut bytes = Vec::new();
     let mut cursor = Cursor::new(&mut bytes);

@@ -8,7 +8,7 @@ Rust parser for **rmesh** file extension. The **rmesh** file extension is used i
 
 ```rust
 let bytes = std::fs::read("GFX/map/lockroom_opt.rmesh").unwrap();
-let rmesh = reread_rmeshad(&bytes).unwrap();
+let rmesh = read_rmesh(&bytes).unwrap();
 assert_eq!(rmesh.colliders.len(), 0);
 assert_eq!(rmesh.entities.len(), 13);
 ```
