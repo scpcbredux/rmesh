@@ -119,7 +119,7 @@ pub struct TriggerBox {
 
 #[derive(BinRead, BinWrite, Debug)]
 pub struct EntityData {
-    pub entity_name_size: u32,
+    entity_name_size: u32,
     pub entity_type: Option<EntityType>,
 }
 
@@ -132,16 +132,6 @@ pub enum EntityType {
     #[br(magic = b"soundemitter")] SoundEmitter(EntitySoundEmitter),
     #[br(magic = b"playerstart")] PlayerStart(EntityPlayerStart),
     #[br(magic = b"model")] Model(EntityModel),
-}
-
-impl Texture {
-    pub fn get_path(&self) -> Result<Option<String>, RMeshError> {
-        if let Some(path) = &self.path {
-            Ok(Some(String::from_utf8(path.values.clone())?))
-        } else {
-            Ok(None)
-        }
-    }
 }
 
 /// Reads a .rmesh file.
