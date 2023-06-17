@@ -14,21 +14,19 @@ mod strings;
 
 pub const ROOM_SCALE: f32 = 8. / 2048.;
 
-#[binrw]
-#[derive(Debug, Default, PartialEq)]
-pub enum HeaderType {
-    #[default]
-    #[brw(magic = b"RoomMesh")]
-    Simple,
-    #[brw(magic = b"RoomMesh.HasTriggerBox")]
-    TriggerBox,
+pub fn header_tag(trigger_box_count: usize) -> Result<FixedLengthString, RMeshError> {
+    if trigger_box_count > 0 {
+        Ok("RoomMesh.HasTriggerBox".into())
+    } else {
+        Ok("RoomMesh".into())
+    }
 }
 
 #[binrw]
 #[derive(Debug, Default)]
 pub struct Header {
-    #[bw(if(!trigger_boxes.is_empty(), HeaderType::TriggerBox))]
-    pub tag: HeaderType,
+    #[bw(try_calc(header_tag(trigger_boxes.len())))]
+    pub kind: FixedLengthString,
 
     #[bw(try_calc(u32::try_from(meshes.len())))]
     mesh_count: u32,
@@ -44,10 +42,10 @@ pub struct Header {
     pub colliders: Vec<SimpleMesh>,
 
     #[bw(try_calc(u32::try_from(trigger_boxes.len())))]
-    #[br(temp, if(tag == HeaderType::TriggerBox))]
+    #[br(temp, if(kind.values == b"RoomMesh.HasTriggerBox"))]
     trigger_boxes_count: u32,
 
-    #[br(count = trigger_boxes_count, if(tag == HeaderType::TriggerBox))]
+    #[br(count = trigger_boxes_count, if(kind.values == b"RoomMesh.HasTriggerBox"))]
     pub trigger_boxes: Vec<TriggerBox>,
 
     #[bw(try_calc(u32::try_from(entities.len())))]
