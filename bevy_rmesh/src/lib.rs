@@ -1,5 +1,7 @@
-mod loader;
 pub use loader::*;
+pub use rmesh;
+
+mod loader;
 
 use bevy::{prelude::*, reflect::TypeUuid};
 
