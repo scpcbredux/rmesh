@@ -1,6 +1,6 @@
 use binrw::{BinRead, BinWrite};
 
-use crate::{strings::{FixedLengthString, ThreeTypeString}};
+use crate::strings::{FixedLengthString, ThreeTypeString};
 
 #[derive(BinRead, BinWrite, Debug)]
 pub struct EntityScreen {

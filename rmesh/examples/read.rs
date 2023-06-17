@@ -7,12 +7,16 @@ fn main() -> Result<(), RMeshError> {
     let rmesh = read_rmesh(&bytes)?;
 
     let mut index = 0;
-    
+
     for mesh in rmesh.meshes {
         println!("Mesh {}", index);
         for texture in mesh.textures {
             if let Some(path) = texture.path {
-                println!("\tTexture Path: {:#?}, {:#?}", String::from(path), texture.blend_type);
+                println!(
+                    "\tTexture Path: {:#?}, {:#?}",
+                    String::from(path),
+                    texture.blend_type
+                );
             }
         }
         index += 1;

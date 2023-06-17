@@ -1,30 +1,3 @@
-[package]
-name = "rmesh"
-version = "0.3.0"
-edition = "2021"
-license = "MIT OR Apache-2.0"
-description = "A parser for the rmesh extension"
-homepage = "https://github.com/DotWith/rmesh/"
-documentation = "https://docs.rs/rmesh"
-repository = "https://github.com/DotWith/rmesh/"
-readme = "README.md"
-exclude = ["/assets/*"]
-
-[dependencies]
-thiserror = "1.0.38"
-binrw = "0.11.1"
-
-[dev-dependencies]
-three-d = "0.14.0"
-
-[[example]]
-name = "read"
-path = "examples/read.rs"
-
-[[example]]
-name = "write"
-path = "examples/write.rs"
-
-[[example]]
-name = "view"
-path = "examples/view.rs"
+[workspace]
+members = ["rmesh", "bevy_rmesh"]
+resolver = "2"

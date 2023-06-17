@@ -15,11 +15,12 @@ assert_eq!(rmesh.entities.len(), 13);
 
 ### Examples
 
-- [Read](../examples/read.rs)
-- [Write](../examples/write.rs)
-- [View](../examples/view.rs)
+- [read](../rmesh/examples/read.rs)
+- [write](../rmesh/examples/write.rs)
+- [bevy_rmesh](../bevy_rmesh/examples/view.rs)
 
 ### Task list
 
 - [ ] Write documentation
 - [X] Create a writer
+- [ ] Add X file loader for bevy_rmesh

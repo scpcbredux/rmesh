@@ -39,7 +39,7 @@ impl From<String> for FixedLengthString {
 
 impl From<FixedLengthString> for String {
     fn from(value: FixedLengthString) -> Self {
-        String::from_utf8(value.values.clone()).unwrap()
+        String::from_utf8(value.values).unwrap()
     }
 }
 
@@ -88,7 +88,9 @@ impl BinWrite for ThreeTypeString {
         endian: binrw::Endian,
         _args: Self::Args<'_>,
     ) -> binrw::BinResult<()> {
-        let string = self.0.iter()
+        let string = self
+            .0
+            .iter()
             .map(|num| num.to_string())
             .collect::<Vec<String>>()
             .join(" ");
