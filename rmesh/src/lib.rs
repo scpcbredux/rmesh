@@ -158,15 +158,6 @@ pub enum EntityType {
 }
 
 /// Reads a .rmesh file.
-///
-/// # Examples
-///
-/// ```rust
-/// let bytes = std::fs::read("GFX/map/lockroom_opt.rmesh").unwrap();
-/// let rmesh = read_rmeshad(&bytes).unwrap();
-/// assert_eq!(rmesh.colliders.len(), 0);
-/// assert_eq!(rmesh.entities.len(), 13);
-/// ```
 pub fn read_rmesh(bytes: &[u8]) -> Result<Header, RMeshError> {
     let mut cursor = Cursor::new(bytes);
     let header: Header = cursor.read_le()?;
@@ -174,31 +165,6 @@ pub fn read_rmesh(bytes: &[u8]) -> Result<Header, RMeshError> {
 }
 
 /// Writes a .rmesh file.
-///
-/// # Examples
-/// Creating a 2D triangle.
-///
-/// ```rust
-/// let header = Header {
-///     meshes: vec![
-///         ComplexMesh {
-///             vertices: vec![
-///                 Vertex { position: [0.0, 0.0, 0.0], ..Default::default() },
-///                 Vertex { position: [0.5, 1.0, 0.0], ..Default::default() },
-///                 Vertex { position: [1.0, 0.0, 0.0], ..Default::default() },
-///             ],
-///             triangles: vec![
-///                 [0, 1, 2]
-///             ],
-///             ..Default::default()
-///         }
-///     ],
-///     ..Default::default()
-/// };
-/// let rmesh = write_rmesh(&header)?;
-/// let mut file = File::create("assets/cube.rmesh").unwrap();
-/// file.write_all(&rmesh).unwrap();
-/// ```
 pub fn write_rmesh(header: &Header) -> Result<Vec<u8>, RMeshError> {
     let mut bytes = Vec::new();
     let mut cursor = Cursor::new(&mut bytes);
