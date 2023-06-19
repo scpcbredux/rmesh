@@ -15,9 +15,9 @@ assert_eq!(rmesh.entities.len(), 13);
 
 ### Examples
 
-- [read](../rmesh/examples/read.rs)
-- [write](../rmesh/examples/write.rs)
-- [bevy_rmesh](../bevy_rmesh/examples/view.rs)
+- [read](rmesh/examples/read.rs)
+- [write](rmesh/examples/write.rs)
+- [bevy_rmesh](bevy_rmesh/examples/view.rs)
 
 ### Task list
 
