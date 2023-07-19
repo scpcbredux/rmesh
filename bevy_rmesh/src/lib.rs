@@ -3,7 +3,7 @@ pub use rmesh;
 
 mod loader;
 
-use bevy::{prelude::*, reflect::TypeUuid};
+use bevy::{prelude::*, reflect::{TypeUuid, TypePath}};
 
 #[derive(Default)]
 pub struct RMeshPlugin;
@@ -16,7 +16,7 @@ impl Plugin for RMeshPlugin {
     }
 }
 
-#[derive(Debug, TypeUuid)]
+#[derive(Debug, TypeUuid, TypePath)]
 #[uuid = "f652caee-aace-49da-9ea3-a314de33b38f"]
 pub struct Room {
     pub scene: Handle<Scene>,
@@ -24,7 +24,7 @@ pub struct Room {
     // pub entity_meshes: Vec<RoomMesh>,
 }
 
-#[derive(Debug, TypeUuid)]
+#[derive(Debug, TypeUuid, TypePath)]
 #[uuid = "2d373e3d-cb2a-468c-ab25-2724f624dd2f"]
 pub struct RoomMesh {
     pub mesh: Handle<Mesh>,
