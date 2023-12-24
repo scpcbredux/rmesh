@@ -2,31 +2,37 @@ use std::path::Path;
 
 use crate::{Room, RoomMesh};
 use anyhow::Result;
-use bevy::asset::AssetPath;
-use bevy::asset::{AssetLoader, LoadContext, LoadedAsset};
+use bevy::asset::io::Reader;
+use bevy::asset::AsyncReadExt;
+use bevy::asset::{AssetLoader, LoadContext};
 use bevy::prelude::*;
-use bevy::render::renderer::RenderDevice;
-use bevy::render::texture::{CompressedImageFormats, ImageType};
+use bevy::render::primitives::Aabb;
+use bevy::render::texture::{CompressedImageFormats, ImageSampler, ImageType};
 use bevy::render::{
     mesh::{Indices, Mesh},
     render_resource::PrimitiveTopology,
 };
-use bevy::utils::BoxedFuture;
 use rmesh::{read_rmesh, ROOM_SCALE};
 
 pub struct RMeshLoader {
-    supported_compressed_formats: CompressedImageFormats,
+    pub(crate) supported_compressed_formats: CompressedImageFormats,
 }
 
 impl AssetLoader for RMeshLoader {
+    type Asset = Room;
+    type Settings = ();
+    type Error = anyhow::Error;
     fn load<'a>(
         &'a self,
-        bytes: &'a [u8],
+        reader: &'a mut Reader,
+        _settings: &'a (),
         load_context: &'a mut LoadContext,
-    ) -> BoxedFuture<'a, Result<()>> {
-        Box::pin(
-            async move { load_rmesh(bytes, load_context, self.supported_compressed_formats).await },
-        )
+    ) -> bevy::utils::BoxedFuture<'a, Result<Room, Self::Error>> {
+        Box::pin(async move {
+            let mut bytes = Vec::new();
+            reader.read_to_end(&mut bytes).await?;
+            load_rmesh(self, &bytes, load_context).await
+        })
     }
 
     fn extensions(&self) -> &[&str] {
@@ -34,34 +40,21 @@ impl AssetLoader for RMeshLoader {
     }
 }
 
-impl FromWorld for RMeshLoader {
-    fn from_world(world: &mut World) -> Self {
-        let supported_compressed_formats = match world.get_resource::<RenderDevice>() {
-            Some(render_device) => CompressedImageFormats::from_features(render_device.features()),
-            None => CompressedImageFormats::all(),
-        };
-        Self {
-            supported_compressed_formats,
-        }
-    }
-}
-
 /// Loads an entire rmesh file.
 async fn load_rmesh<'a, 'b>(
+    loader: &RMeshLoader,
     bytes: &'a [u8],
     load_context: &'a mut LoadContext<'b>,
-    supported_compressed_formats: CompressedImageFormats,
-) -> Result<()> {
+) -> Result<Room> {
     let header = read_rmesh(bytes)?;
 
     let mut meshes = vec![];
     // let mut entity_meshes = vec![];
 
-    for i in 0..header.meshes.len() {
-        let mesh = &header.meshes[i];
-        let mut result_mesh = Mesh::new(PrimitiveTopology::TriangleList);
+    for (i, complex_mesh) in header.meshes.iter().enumerate() {
+        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
-        let positions: Vec<_> = mesh
+        let positions: Vec<_> = complex_mesh
             .vertices
             .iter()
             .map(|v| {
@@ -73,7 +66,7 @@ async fn load_rmesh<'a, 'b>(
             })
             .collect();
 
-        let tex_coords: Vec<_> = mesh
+        let tex_coords: Vec<_> = complex_mesh
             .vertices
             .iter()
             .flat_map(|v| {
@@ -83,49 +76,43 @@ async fn load_rmesh<'a, 'b>(
                 ]
             })
             .collect();
-        let indices = mesh
+        let indices = complex_mesh
             .triangles
             .iter()
             .flat_map(|strip| strip.iter().rev().copied())
             .collect();
-        result_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
-        result_mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, tex_coords);
-        result_mesh.set_indices(Some(Indices::U32(indices)));
-        result_mesh.duplicate_vertices();
-        result_mesh.compute_flat_normals();
+        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, tex_coords);
+        mesh.set_indices(Some(Indices::U32(indices)));
+        mesh.duplicate_vertices();
+        mesh.compute_flat_normals();
 
-        let mesh_handle =
-            load_context.set_labeled_asset(&format!("Mesh{0}", i), LoadedAsset::new(result_mesh));
+        let mesh = load_context.add_labeled_asset(format!("Mesh{0}", i), mesh);
 
-        let base_color_texture = if let Some(path) = &mesh.textures[1].path {
+        let base_color_texture = if let Some(path) = &complex_mesh.textures[1].path {
             let texture = load_texture(
                 &String::from(path),
                 load_context,
-                supported_compressed_formats,
+                loader.supported_compressed_formats,
             )
             .await?;
-            Some(
-                load_context
-                    .set_labeled_asset(&format!("Texture{0}", i), LoadedAsset::new(texture)),
-            )
+            Some(load_context.add_labeled_asset(format!("Texture{0}", i), texture))
         } else {
             None
         };
 
-        let material = load_context.set_labeled_asset(
-            &format!("Material{0}", i),
-            LoadedAsset::new(StandardMaterial {
+        let material = load_context.add_labeled_asset(
+            format!("Material{0}", i),
+            StandardMaterial {
                 base_color_texture,
                 ..Default::default()
-            }),
+            },
         );
 
-        meshes.push(RoomMesh {
-            mesh: mesh_handle,
-            material,
-        });
+        meshes.push(RoomMesh { mesh, material });
     }
 
+    // TODO: add setting if we want to load models with "x"
     // for entity in &header.entities {
     //     if let Some(rmesh::EntityType::Model(data)) = &entity.entity_type {
     //         let name = &String::from(data.name.clone());
@@ -159,21 +146,26 @@ async fn load_rmesh<'a, 'b>(
 
     let scene = {
         let mut world = World::default();
+        let mut scene_load_context = load_context.begin_labeled_asset();
 
         world
             .spawn(SpatialBundle::INHERITED_IDENTITY)
             .with_children(|parent| {
                 for i in 0..header.meshes.len() {
                     let mesh_label = format!("Mesh{0}", i);
-                    let mesh_asset_path =
-                        AssetPath::new_ref(load_context.path(), Some(&mesh_label));
                     let mat_label = format!("Material{0}", i);
-                    let mat_asset_path = AssetPath::new_ref(load_context.path(), Some(&mat_label));
-                    parent.spawn(PbrBundle {
-                        mesh: load_context.get_handle(mesh_asset_path),
-                        material: load_context.get_handle(mat_asset_path),
+                    let mut mesh_entity = parent.spawn(PbrBundle {
+                        mesh: scene_load_context.get_label_handle(&mesh_label),
+                        material: scene_load_context.get_label_handle(&mat_label),
                         ..Default::default()
                     });
+                    let complex_mesh = &header.meshes[i];
+                    if let Some((min, max)) = rmesh::calculate_bounds(&complex_mesh.vertices) {
+                        mesh_entity.insert(Aabb::from_min_max(
+                            Vec3::from_slice(&min),
+                            Vec3::from_slice(&max),
+                        ));
+                    }
                 }
                 for entity in header.entities {
                     if let Some(entity_type) = entity.entity_type {
@@ -225,11 +217,7 @@ async fn load_rmesh<'a, 'b>(
                             rmesh::EntityType::Model(data) => {
                                 let name = &String::from(data.name.clone());
                                 let mesh_label = format!("EntityMesh{0}", name);
-                                let mesh_asset_path =
-                                    AssetPath::new_ref(load_context.path(), Some(&mesh_label));
                                 let mat_label = format!("EntityMaterial{0}", name);
-                                let mat_asset_path =
-                                    AssetPath::new_ref(load_context.path(), Some(&mat_label));
 
                                 parent.spawn(PbrBundle {
                                     transform: Transform {
@@ -252,8 +240,8 @@ async fn load_rmesh<'a, 'b>(
                                         )
                                             .into(),
                                     },
-                                    mesh: load_context.get_handle(mesh_asset_path),
-                                    material: load_context.get_handle(mat_asset_path),
+                                    mesh: scene_load_context.get_label_handle(&mesh_label),
+                                    material: scene_load_context.get_label_handle(&mat_label),
                                     ..Default::default()
                                 });
                             }
@@ -263,21 +251,20 @@ async fn load_rmesh<'a, 'b>(
                 }
             });
 
-        load_context.set_labeled_asset("Scene", LoadedAsset::new(Scene::new(world)))
+        let loaded_scene = scene_load_context.finish(Scene::new(world), None);
+        load_context.add_loaded_labeled_asset("Scene", loaded_scene)
     };
 
-    load_context.set_default_asset(LoadedAsset::new(Room {
+    Ok(Room {
         scene,
         // entity_meshes,
         meshes,
-    }));
-
-    Ok(())
+    })
 }
 
 async fn load_texture<'a>(
     path: &str,
-    load_context: &LoadContext<'a>,
+    load_context: &mut LoadContext<'a>,
     supported_compressed_formats: CompressedImageFormats,
 ) -> Result<Image> {
     let parent = load_context.path().parent().unwrap();
@@ -292,5 +279,6 @@ async fn load_texture<'a>(
         image_type,
         supported_compressed_formats,
         true,
+        ImageSampler::Default,
     )?)
 }

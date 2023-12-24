@@ -1,6 +1,6 @@
 [package]
 name = "rmesh"
-version = "0.3.2"
+version = "0.3.3"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "A parser for the rmesh extension"
@@ -10,8 +10,8 @@ repository = "https://github.com/scpcbredux/rmesh/"
 readme = "../README.md"
 
 [dependencies]
-thiserror = "1.0.38"
-binrw = "0.11.1"
+thiserror = "1.0.51"
+binrw = "0.13.3"
 
 [[example]]
 name = "read"
