@@ -7,12 +7,13 @@ use bevy::asset::AsyncReadExt;
 use bevy::asset::{AssetLoader, LoadContext};
 use bevy::prelude::*;
 use bevy::render::primitives::Aabb;
+use bevy::render::render_asset::RenderAssetUsages;
 use bevy::render::texture::{CompressedImageFormats, ImageSampler, ImageType};
 use bevy::render::{
     mesh::{Indices, Mesh},
     render_resource::PrimitiveTopology,
 };
-use rmesh::{read_rmesh, ROOM_SCALE};
+use rmesh::{read_rmesh, CalcBoundBox, ROOM_SCALE};
 
 pub struct RMeshLoader {
     pub(crate) supported_compressed_formats: CompressedImageFormats,
@@ -52,7 +53,7 @@ async fn load_rmesh<'a, 'b>(
     // let mut entity_meshes = vec![];
 
     for (i, complex_mesh) in header.meshes.iter().enumerate() {
-        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default());
 
         let positions: Vec<_> = complex_mesh
             .vertices
@@ -65,7 +66,6 @@ async fn load_rmesh<'a, 'b>(
                 ]
             })
             .collect();
-
         let tex_coords: Vec<_> = complex_mesh
             .vertices
             .iter()
@@ -81,9 +81,10 @@ async fn load_rmesh<'a, 'b>(
             .iter()
             .flat_map(|strip| strip.iter().rev().copied())
             .collect();
+
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
         mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, tex_coords);
-        mesh.set_indices(Some(Indices::U32(indices)));
+        mesh.insert_indices(Indices::U32(indices));
         mesh.duplicate_vertices();
         mesh.compute_flat_normals();
 
@@ -151,21 +152,27 @@ async fn load_rmesh<'a, 'b>(
         world
             .spawn(SpatialBundle::INHERITED_IDENTITY)
             .with_children(|parent| {
-                for i in 0..header.meshes.len() {
-                    let mesh_label = format!("Mesh{0}", i);
-                    let mat_label = format!("Material{0}", i);
-                    let mut mesh_entity = parent.spawn(PbrBundle {
-                        mesh: scene_load_context.get_label_handle(&mesh_label),
-                        material: scene_load_context.get_label_handle(&mat_label),
-                        ..Default::default()
-                    });
-                    let complex_mesh = &header.meshes[i];
-                    if let Some((min, max)) = rmesh::calculate_bounds(&complex_mesh.vertices) {
-                        mesh_entity.insert(Aabb::from_min_max(
-                            Vec3::from_slice(&min),
-                            Vec3::from_slice(&max),
-                        ));
-                    }
+                for (i, mesh) in header.meshes.iter().enumerate() {
+                    parent
+                        .spawn(SpatialBundle::default())
+                        .insert(Name::new(mesh_name(i)))
+                        .with_children(|parent| {
+                            let mesh_label = mesh_name(i);
+                            let mat_label = format!("Material{0}", i);
+                            let bounds = mesh.bounding_box();
+
+                            let mut mesh_entity = parent.spawn(PbrBundle {
+                                mesh: scene_load_context.get_label_handle(&mesh_label),
+                                material: scene_load_context.get_label_handle(&mat_label),
+                                ..Default::default()
+                            });
+                            mesh_entity.insert(Aabb::from_min_max(
+                                Vec3::from_slice(&bounds.min) * ROOM_SCALE,
+                                Vec3::from_slice(&bounds.max) * ROOM_SCALE,
+                            ));
+
+                            mesh_entity.insert(Name::new(mesh_name(i)));
+                        });
                 }
                 for entity in header.entities {
                     if let Some(entity_type) = entity.entity_type {
@@ -214,7 +221,7 @@ async fn load_rmesh<'a, 'b>(
                                     ..Default::default()
                                 });
                             }
-                            rmesh::EntityType::Model(data) => {
+                            /*rmesh::EntityType::Model(data) => {
                                 let name = &String::from(data.name.clone());
                                 let mesh_label = format!("EntityMesh{0}", name);
                                 let mat_label = format!("EntityMaterial{0}", name);
@@ -244,7 +251,7 @@ async fn load_rmesh<'a, 'b>(
                                     material: scene_load_context.get_label_handle(&mat_label),
                                     ..Default::default()
                                 });
-                            }
+                            }*/
                             _ => (),
                         }
                     }
@@ -260,6 +267,10 @@ async fn load_rmesh<'a, 'b>(
         // entity_meshes,
         meshes,
     })
+}
+
+fn mesh_name(i: usize) -> String {
+    format!("Mesh{0}", i)
 }
 
 async fn load_texture<'a>(
@@ -280,5 +291,6 @@ async fn load_texture<'a>(
         supported_compressed_formats,
         true,
         ImageSampler::Default,
+        RenderAssetUsages::default(),
     )?)
 }

@@ -131,6 +131,80 @@ pub struct TriggerBox {
     pub name: FixedLengthString,
 }
 
+impl CalcBoundBox for SimpleMesh {
+    fn bounding_box(&self) -> Bounds {
+        let mut min_x = f32::INFINITY;
+        let mut min_y = f32::INFINITY;
+        let mut min_z = f32::INFINITY;
+        let mut max_x = f32::NEG_INFINITY;
+        let mut max_y = f32::NEG_INFINITY;
+        let mut max_z = f32::NEG_INFINITY;
+
+        for vertex in &self.vertices {
+            let [x, y, z] = *vertex;
+
+            // Update min values
+            min_x = min_x.min(x);
+            min_y = min_y.min(y);
+            min_z = min_z.min(z);
+
+            // Update max values
+            max_x = max_x.max(x);
+            max_y = max_y.max(y);
+            max_z = max_z.max(z);
+        }
+
+        let min_point = [min_x, min_y, min_z];
+        let max_point = [max_x, max_y, max_z];
+        Bounds::new(min_point, max_point)
+    }
+}
+
+impl CalcBoundBox for ComplexMesh {
+    fn bounding_box(&self) -> Bounds {
+        let mut min_x = f32::INFINITY;
+        let mut min_y = f32::INFINITY;
+        let mut min_z = f32::INFINITY;
+        let mut max_x = f32::NEG_INFINITY;
+        let mut max_y = f32::NEG_INFINITY;
+        let mut max_z = f32::NEG_INFINITY;
+
+        for vertex in &self.vertices {
+            let [x, y, z] = vertex.position;
+
+            // Update min values
+            min_x = min_x.min(x);
+            min_y = min_y.min(y);
+            min_z = min_z.min(z);
+
+            // Update max values
+            max_x = max_x.max(x);
+            max_y = max_y.max(y);
+            max_z = max_z.max(z);
+        }
+
+        let min_point = [min_x, min_y, min_z];
+        let max_point = [max_x, max_y, max_z];
+        Bounds::new(min_point, max_point)
+    }
+}
+
+pub trait CalcBoundBox {
+    /// Used for aabb calc
+    fn bounding_box(&self) -> Bounds;
+}
+
+pub struct Bounds {
+    pub min: [f32; 3],
+    pub max: [f32; 3],
+}
+
+impl Bounds {
+    pub fn new(min: [f32; 3], max: [f32; 3]) -> Self {
+        Self { min, max }
+    }
+}
+
 #[binrw]
 #[derive(Debug)]
 pub struct EntityData {
@@ -172,36 +246,4 @@ pub fn write_rmesh(header: &Header) -> Result<Vec<u8>, RMeshError> {
     cursor.write_le(header)?;
 
     Ok(bytes)
-}
-
-/// Used for aabb calc
-pub fn calculate_bounds(vertices: &Vec<Vertex>) -> Option<([f32; 3], [f32; 3])> {
-    if vertices.is_empty() {
-        return None;
-    }
-
-    let mut min_x = f32::INFINITY;
-    let mut min_y = f32::INFINITY;
-    let mut min_z = f32::INFINITY;
-    let mut max_x = f32::NEG_INFINITY;
-    let mut max_y = f32::NEG_INFINITY;
-    let mut max_z = f32::NEG_INFINITY;
-
-    for vertex in vertices {
-        let [x, y, z] = vertex.position;
-
-        // Update min values
-        min_x = min_x.min(x);
-        min_y = min_y.min(y);
-        min_z = min_z.min(z);
-
-        // Update max values
-        max_x = max_x.max(x);
-        max_y = max_y.max(y);
-        max_z = max_z.max(z);
-    }
-
-    let min_point = [min_x, min_y, min_z];
-    let max_point = [max_x, max_y, max_z];
-    Some((min_point, max_point))
 }

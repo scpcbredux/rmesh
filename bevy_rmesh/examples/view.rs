@@ -17,7 +17,10 @@ fn setup(
     // cube
     commands.spawn(PbrBundle {
         mesh: asset_server.load("cube.rmesh#Mesh0"),
-        material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+        material: materials.add(StandardMaterial {
+            base_color: Color::rgb(0.8, 0.7, 0.6),
+            ..default()
+        }),
         transform: Transform::from_xyz(0.0, 0.5, 0.0),
         ..default()
     });

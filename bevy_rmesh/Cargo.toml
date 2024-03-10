@@ -1,6 +1,6 @@
 [package]
 name = "bevy_rmesh"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "A Bevy extension for RMesh loading"
@@ -12,12 +12,12 @@ keywords = ["bevy"]
 exclude = ["assets/*"]
 
 [dependencies]
-bevy = { version = "0.12.1", default-features = false, features = ["bevy_asset", "bevy_pbr", "bevy_render", "bevy_scene"] }
+bevy = { version = "0.13.0", default-features = false, features = ["bevy_asset", "bevy_pbr", "bevy_render", "bevy_scene"] }
 anyhow = "1.0.68"
 rmesh = { path = "../rmesh", version = "0.3.3" }
 
 [dev-dependencies]
-bevy = "0.12.1"
+bevy = "0.13.0"
 
 [[example]]
 name = "view"
