@@ -131,7 +131,7 @@ pub struct TriggerBox {
     pub name: FixedLengthString,
 }
 
-impl CalcBoundBox for SimpleMesh {
+impl ExtMesh for SimpleMesh {
     fn bounding_box(&self) -> Bounds {
         let mut min_x = f32::INFINITY;
         let mut min_y = f32::INFINITY;
@@ -158,9 +158,58 @@ impl CalcBoundBox for SimpleMesh {
         let max_point = [max_x, max_y, max_z];
         Bounds::new(min_point, max_point)
     }
+    
+    fn calculate_normals(&self) -> Vec<[f32; 3]> {
+        // Initialize vertex normals with zero vectors
+        let mut vertex_normals = vec![[0.0, 0.0, 0.0]; self.vertices.len()];
+
+        // Calculate face normals and accumulate them to vertex normals
+        for triangle in &self.triangles {
+            let vertex0 = self.vertices[triangle[0] as usize];
+            let vertex1 = self.vertices[triangle[1] as usize];
+            let vertex2 = self.vertices[triangle[2] as usize];
+
+            let edge1 = [
+                vertex1[0] - vertex0[0],
+                vertex1[1] - vertex0[1],
+                vertex1[2] - vertex0[2],
+            ];
+            let edge2 = [
+                vertex2[0] - vertex0[0],
+                vertex2[1] - vertex0[1],
+                vertex2[2] - vertex0[2],
+            ];
+
+            let normal = [
+                edge1[1] * edge2[2] - edge1[2] * edge2[1],
+                edge1[2] * edge2[0] - edge1[0] * edge2[2],
+                edge1[0] * edge2[1] - edge1[1] * edge2[0],
+            ];
+
+            // Accumulate face normal to the vertices of the triangle
+            for i in 0..3 {
+                let vertex_index = triangle[i] as usize;
+                vertex_normals[vertex_index][0] += normal[0];
+                vertex_normals[vertex_index][1] += normal[1];
+                vertex_normals[vertex_index][2] += normal[2];
+            }
+        }
+
+        // Normalize vertex normals
+        for normal in &mut vertex_normals {
+            let length = (normal[0].powi(2) + normal[1].powi(2) + normal[2].powi(2)).sqrt();
+            if length != 0.0 {
+                normal[0] /= length;
+                normal[1] /= length;
+                normal[2] /= length;
+            }
+        }
+
+        vertex_normals
+    }
 }
 
-impl CalcBoundBox for ComplexMesh {
+impl ExtMesh for ComplexMesh {
     fn bounding_box(&self) -> Bounds {
         let mut min_x = f32::INFINITY;
         let mut min_y = f32::INFINITY;
@@ -187,11 +236,62 @@ impl CalcBoundBox for ComplexMesh {
         let max_point = [max_x, max_y, max_z];
         Bounds::new(min_point, max_point)
     }
+    
+    fn calculate_normals(&self) -> Vec<[f32; 3]> {
+        // Initialize vertex normals with zero vectors
+        let mut vertex_normals = vec![[0.0, 0.0, 0.0]; self.vertices.len()];
+
+        // Calculate face normals and accumulate them to vertex normals
+        for triangle in &self.triangles {
+            let vertex0 = self.vertices[triangle[0] as usize].position;
+            let vertex1 = self.vertices[triangle[1] as usize].position;
+            let vertex2 = self.vertices[triangle[2] as usize].position;
+
+            let edge1 = [
+                vertex1[0] - vertex0[0],
+                vertex1[1] - vertex0[1],
+                vertex1[2] - vertex0[2],
+            ];
+            let edge2 = [
+                vertex2[0] - vertex0[0],
+                vertex2[1] - vertex0[1],
+                vertex2[2] - vertex0[2],
+            ];
+
+            let normal = [
+                edge1[1] * edge2[2] - edge1[2] * edge2[1],
+                edge1[2] * edge2[0] - edge1[0] * edge2[2],
+                edge1[0] * edge2[1] - edge1[1] * edge2[0],
+            ];
+
+            // Accumulate face normal to the vertices of the triangle
+            for i in 0..3 {
+                let vertex_index = triangle[i] as usize;
+                vertex_normals[vertex_index][0] += normal[0];
+                vertex_normals[vertex_index][1] += normal[1];
+                vertex_normals[vertex_index][2] += normal[2];
+            }
+        }
+
+        // Normalize vertex normals
+        for normal in &mut vertex_normals {
+            let length = (normal[0].powi(2) + normal[1].powi(2) + normal[2].powi(2)).sqrt();
+            if length != 0.0 {
+                normal[0] /= length;
+                normal[1] /= length;
+                normal[2] /= length;
+            }
+        }
+
+        vertex_normals
+    }
 }
 
-pub trait CalcBoundBox {
+pub trait ExtMesh {
     /// Used for aabb calc
     fn bounding_box(&self) -> Bounds;
+    /// Calculate normals for the vertices based on the triangle faces.
+    fn calculate_normals(&self) -> Vec<[f32; 3]>;
 }
 
 pub struct Bounds {

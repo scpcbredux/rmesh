@@ -13,7 +13,7 @@ use bevy::render::{
     mesh::{Indices, Mesh},
     render_resource::PrimitiveTopology,
 };
-use rmesh::{read_rmesh, CalcBoundBox, ROOM_SCALE};
+use rmesh::{read_rmesh, ExtMesh, ROOM_SCALE};
 
 pub struct RMeshLoader {
     pub(crate) supported_compressed_formats: CompressedImageFormats,
@@ -53,7 +53,10 @@ async fn load_rmesh<'a, 'b>(
     // let mut entity_meshes = vec![];
 
     for (i, complex_mesh) in header.meshes.iter().enumerate() {
-        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default());
+        let mut mesh = Mesh::new(
+            PrimitiveTopology::TriangleList,
+            RenderAssetUsages::default(),
+        );
 
         let positions: Vec<_> = complex_mesh
             .vertices
@@ -69,24 +72,25 @@ async fn load_rmesh<'a, 'b>(
         let tex_coords: Vec<_> = complex_mesh
             .vertices
             .iter()
-            .flat_map(|v| {
-                [
-                    [v.tex_coords[0][0], 1.0 - v.tex_coords[0][1]], // First UV channel
-                    [v.tex_coords[1][0], 1.0 - v.tex_coords[1][1]], // Second UV channel
-                ]
-            })
+            // .flat_map(|v| {
+            //     [
+            //         [v.tex_coords[0][0], 1.0 - v.tex_coords[0][1]], // First UV channel
+            //         [v.tex_coords[1][0], 1.0 - v.tex_coords[1][1]], // Second UV channel
+            //     ]
+            // })
+            .map(|v| v.tex_coords[0])
             .collect();
-        let indices = complex_mesh
+        let indices: Vec<u32> = complex_mesh
             .triangles
             .iter()
             .flat_map(|strip| strip.iter().rev().copied())
             .collect();
+        let normals = complex_mesh.calculate_normals();
 
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
         mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, tex_coords);
-        mesh.insert_indices(Indices::U32(indices));
-        mesh.duplicate_vertices();
-        mesh.compute_flat_normals();
+        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+        mesh.insert_indices(Indices::U32(indices)); // TODO: Colliders need this second call for indices
 
         let mesh = load_context.add_labeled_asset(format!("Mesh{0}", i), mesh);
 
