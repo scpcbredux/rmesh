@@ -17,7 +17,7 @@ fn setup(
     commands.spawn(PbrBundle {
         mesh: asset_server.load("cube.rmesh#Mesh0"),
         material: materials.add(StandardMaterial {
-            base_color: Color::rgb(0.8, 0.7, 0.6),
+            base_color: Color::srgb(0.8, 0.7, 0.6),
             ..default()
         }),
         transform: Transform::from_xyz(0.0, 0.5, 0.0),
