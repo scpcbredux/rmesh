@@ -14,7 +14,7 @@ use bevy::render::{
     render_resource::PrimitiveTopology,
 };
 use directx_mesh::read_directx_mesh;
-use rmesh::{read_rmesh, ROOM_SCALE};
+use rmesh::{read_rmesh, ExtMesh, ROOM_SCALE};
 use serde::{Deserialize, Serialize};
 
 pub struct RMeshLoader {
@@ -177,7 +177,7 @@ async fn load_rmesh<'a, 'b, 'c>(
                             ..Default::default()
                         });
                         let complex_mesh = &header.meshes[i];
-                        let bounds = rmesh::bounding_box(&complex_mesh.vertices);
+                        let bounds = complex_mesh.bounding_box();
                         mesh_entity.insert(Aabb::from_min_max(
                             Vec3::from_slice(&bounds.min),
                             Vec3::from_slice(&bounds.max),
