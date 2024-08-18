@@ -3,8 +3,7 @@ use bevy_rmesh::RMeshPlugin;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
-        .add_plugins(RMeshPlugin)
+        .add_plugins((DefaultPlugins, RMeshPlugin))
         .add_systems(Startup, setup)
         .run();
 }

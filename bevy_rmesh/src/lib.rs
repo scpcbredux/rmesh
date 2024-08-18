@@ -20,9 +20,8 @@ impl Plugin for RMeshPlugin {
     }
 
     fn finish(&self, app: &mut App) {
-        let supported_compressed_formats = match app.world.get_resource::<RenderDevice>() {
+        let supported_compressed_formats = match app.world().get_resource::<RenderDevice>() {
             Some(render_device) => CompressedImageFormats::from_features(render_device.features()),
-
             None => CompressedImageFormats::NONE,
         };
         app.register_asset_loader(RMeshLoader {
@@ -35,7 +34,7 @@ impl Plugin for RMeshPlugin {
 pub struct Room {
     pub scene: Handle<Scene>,
     pub meshes: Vec<RoomMesh>,
-    // pub entity_meshes: Vec<RoomMesh>,
+    pub entity_meshes: Vec<Handle<Mesh>>,
 }
 
 #[derive(Asset, Debug, TypePath)]
