@@ -105,15 +105,15 @@ async fn load_rmesh<'a, 'b, 'c>(
             .collect();
         mesh.insert_attribute(Mesh::ATTRIBUTE_UV_1, lightmaps_uvs);
 
+        let normals = complex_mesh.calculate_normals();
+        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+
         let indices = complex_mesh
             .triangles
             .iter()
             .flat_map(|strip| strip.iter().rev().copied())
             .collect();
         mesh.insert_indices(Indices::U32(indices));
-
-        mesh.duplicate_vertices();
-        mesh.compute_flat_normals();
 
         let mesh = load_context.add_labeled_asset(format!("Mesh{0}", i), mesh);
 
@@ -177,12 +177,11 @@ async fn load_rmesh<'a, 'b, 'c>(
                             ..Default::default()
                         });
                         let complex_mesh = &header.meshes[i];
-                        if let Some((min, max)) = rmesh::calculate_bounds(&complex_mesh.vertices) {
-                            mesh_entity.insert(Aabb::from_min_max(
-                                Vec3::from_slice(&min),
-                                Vec3::from_slice(&max),
-                            ));
-                        }
+                        let bounds = rmesh::bounding_box(&complex_mesh.vertices);
+                        mesh_entity.insert(Aabb::from_min_max(
+                            Vec3::from_slice(&bounds.min),
+                            Vec3::from_slice(&bounds.max),
+                        ));
                     }
                     for entity in header.entities {
                         if let Some(entity_type) = entity.entity_type {
